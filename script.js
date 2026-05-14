@@ -94,15 +94,14 @@ async function checkAndInitializeUser(user) {
 const loginBtn = document.getElementById('loginBtn');
 if (loginBtn) {
     loginBtn.addEventListener('click', () => {
-        // Sprawdzamy, czy użytkownik jest na urządzeniu mobilnym
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         if (isMobile) {
-            // Na telefonach przekierowujemy stronę do Google
-            signInWithRedirect(auth, provider);
+            signInWithRedirect(auth, provider, browserPopupRedirectResolver);
         } else {
-            // Na komputerach otwieramy okienko pop-up
-            signInWithPopup(auth, provider).catch(err => console.error(err));
+            signInWithPopup(auth, provider).catch(err => {
+                alert("Błąd logowania: " + err.message);
+            });
         }
     });
 }
