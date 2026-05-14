@@ -2,13 +2,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { 
     getAuth, 
-    signInWithPopup, 
-    signInWithRedirect, 
+    signInWithPopup,
+    signInWithRedirect,
     getRedirectResult,
     GoogleAuthProvider, 
     onAuthStateChanged, 
-    signOut,
-    browserPopupRedirectResolver // <--- MUSISZ TO DODAĆ TUTAJ
+    signOut
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // 1. Konfiguracja Firebase
@@ -35,12 +34,16 @@ let currentUserPath = null;
 
 // --- LOGIKA AUTORYZACJI I INICJALIZACJI BAZY ---
 
-// Obsługa wyniku przekierowania (ważne dla telefonów)
+// Obsługa wyniku przekierowania (ważne dla telefonów z redirect flow)
+// onAuthStateChanged i tak złapie zalogowanego usera — ten blok obsługuje tylko błędy redirect
 getRedirectResult(auth).catch((error) => {
-    console.error("Błąd po przekierowaniu:", error.message);
+    // Ignoruj błąd "No redirect operation" — to normalny stan gdy nie było redirect
+    if (error.code !== 'auth/no-current-user') {
+        console.error("Błąd po przekierowaniu:", error.code, error.message);
+    }
 });
 
-// Słuchacz stanu zalogowania
+// Słuchacz stanu zalogowania — główna logika, działa zarówno po popup jak i redirect
 onAuthStateChanged(auth, async (user) => {
     const userDisplay = document.getElementById('userDisplayName');
     
@@ -48,14 +51,12 @@ onAuthStateChanged(auth, async (user) => {
         console.log("Zalogowano UID:", user.uid);
         currentUserPath = `users/${user.uid}`;
         
-        // Sprawdź czy użytkownik ma już swoją bazę, jeśli nie - stwórz ją
         await checkAndInitializeUser(user);
 
         if (userDisplay) {
             userDisplay.innerText = `Logged in as: ${user.displayName}`;
         }
 
-        // Załaduj dane i przejdź do home1
         loadUserDecks();
         navigationHistory = [];
         updateView('home1');
@@ -80,7 +81,7 @@ async function checkAndInitializeUser(user) {
                     email: user.email,
                     createdAt: new Date().toISOString()
                 },
-                decks: {} // Puste miejsce na fiszki
+                decks: {}
             };
             await set(userRef, initialData);
         }
@@ -91,18 +92,27 @@ async function checkAndInitializeUser(user) {
 
 // --- LOGIKA PRZYCISKÓW ---
 
-// Przycisk Logowania (z obsługą Mobile vs Desktop)
+// Przycisk Logowania
+// Używamy zawsze signInWithPopup — działa na desktop i mobile (Chrome, Safari, Firefox).
+// signInWithRedirect jest zostawiony jako fallback tylko gdy popup zostanie zablokowany.
 const loginBtn = document.getElementById('loginBtn');
 if (loginBtn) {
-    loginBtn.addEventListener('click', () => {
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-        if (isMobile) {
-            signInWithRedirect(auth, provider, browserPopupRedirectResolver);
-        } else {
-            signInWithPopup(auth, provider).catch(err => {
+    loginBtn.addEventListener('click', async () => {
+        try {
+            await signInWithPopup(auth, provider);
+            // onAuthStateChanged automatycznie obsłuży zalogowanie
+        } catch (err) {
+            if (err.code === 'auth/popup-blocked') {
+                // Popup zablokowany przez przeglądarkę — przełącz na redirect
+                console.warn("Popup zablokowany, używam redirect...");
+                signInWithRedirect(auth, provider);
+            } else if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+                // Użytkownik sam zamknął okno — nic nie rób
+                console.log("Logowanie anulowane przez użytkownika.");
+            } else {
+                console.error("Błąd logowania:", err.code, err.message);
                 alert("Błąd logowania: " + err.message);
-            });
+            }
         }
     });
 }
@@ -122,7 +132,6 @@ function loadUserDecks() {
 
     const userDecksRef = ref(db, `${currentUserPath}/decks`);
     
-    // Nasłuchiwanie zmian w czasie rzeczywistym
     onValue(userDecksRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
