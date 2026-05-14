@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meno v.4</title>
+    <link rel="icon" type="image/png" href="icons/favicon.png" />
+    <link rel="stylesheet" href="style.css" />
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+
+    <meta name="apple-mobile-web-app-title" content="Meno" />
+
+    <link rel="apple-touch-icon" href="icons/favicon.png" />
+  </head>
+  <body>
+    <div id="login-section" class="screen active">
+      <div class="logo"><img src="icons/logo.svg" /></div>
+      <div id="loginBtn" class="btn">
+        <img src="icons/google.png" class="btn-icon" />
+        <p>Log in with Google</p>
+      </div>
+    </div>
+
+    <div id="home1" class="screen">
+      <h1>Hello!</h1>
+      <div class="logo"><img src="icons/logo.svg" /></div>
+      <p id="userDisplayName" style="color: var(--white)"></p>
+      <button id="logoutBtn">Log out</button>
+      <button onclick="navigateTo('deck2')">Go to Deck 2</button>
+    </div>
+
+    <div id="deck2" class="screen">
+      <h1>Section Deck 2</h1>
+      <button onclick="goBack()">Back</button>
+    </div>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>

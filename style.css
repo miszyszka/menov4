@@ -1,0 +1,92 @@
+@import url("https://fonts.googleapis.com/css2?family=Blinker:wght@100;200;300;400;600;700;800;900&family=Outfit:wght@100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+:root {
+  --white: #ffffff;
+  --basic-radius: 10px;
+}
+body {
+  font-family: "Outfit", sans-serif;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* background-color: black; */
+  background-image: url("IMG/bg-horizontal.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+}
+
+h1 {
+  color: var(--white);
+}
+
+p {
+  color: var(--white);
+}
+
+.logo {
+  position: absolute;
+  transform: translateX(-95px);
+  top: 0px;
+  left: 0px;
+}
+
+.screen {
+  position: relative;
+  display: none;
+  text-align: center;
+  /* border: solid 2px red; */
+  height: 90vh;
+  width: 90vw;
+}
+
+.screen.active {
+  display: flex;          /* Zmieniamy z block na flex */
+  flex-direction: column; /* Układamy elementy (np. h1 i przycisk) w pionie */
+  align-items: center;    /* Środkujemy w poziomie */
+  justify-content: center;/* Środkujemy w pionie */
+}
+
+.btn {
+  border: 1px solid var(--white);
+  border-radius: var(--basic-radius);
+  padding: 10px 20px;
+  cursor: pointer;
+  display: inline-block;
+  opacity: 0.8;
+  transition: 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.btn-icon {
+  width: 20px; /* Dopasuj rozmiar ikony */
+  height: 20px;
+  object-fit: contain;
+}
+
+.btn:hover {
+  opacity: 1;
+  transform: scale(1.03);
+}
+
+.btn p {
+  margin: 0;
+  color: var(--white);
+  user-select: none;
+}
+
+/* Reguła dla telefonów (ekrany o szerokości mniejszej niż 768px) */
+@media (max-width: 767px) {
+  body {
+    background-image: url("IMG/bg-vertical.jpg");
+  }
+}
