@@ -3,6 +3,8 @@ import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/fir
 import { 
     getAuth, 
     signInWithPopup, 
+    signInWithRedirect, 
+    getRedirectResult,
     GoogleAuthProvider, 
     onAuthStateChanged, 
     signOut 
@@ -32,6 +34,12 @@ let currentUserPath = null;
 
 // --- LOGIKA AUTORYZACJI I INICJALIZACJI BAZY ---
 
+// Obsługa wyniku przekierowania (ważne dla telefonów)
+getRedirectResult(auth).catch((error) => {
+    console.error("Błąd po przekierowaniu:", error.message);
+});
+
+// Słuchacz stanu zalogowania
 onAuthStateChanged(auth, async (user) => {
     const userDisplay = document.getElementById('userDisplayName');
     
@@ -39,14 +47,14 @@ onAuthStateChanged(auth, async (user) => {
         console.log("Zalogowano UID:", user.uid);
         currentUserPath = `users/${user.uid}`;
         
-        // KROK 1: Sprawdź czy użytkownik ma już swoją bazę, jeśli nie - stwórz ją
+        // Sprawdź czy użytkownik ma już swoją bazę, jeśli nie - stwórz ją
         await checkAndInitializeUser(user);
 
         if (userDisplay) {
-            userDisplay.innerText = `Zalogowany jako: ${user.displayName}`;
+            userDisplay.innerText = `Logged in as: ${user.displayName}`;
         }
 
-        // KROK 2: Załaduj dane i przejdź do home1
+        // Załaduj dane i przejdź do home1
         loadUserDecks();
         navigationHistory = [];
         updateView('home1');
@@ -64,26 +72,47 @@ async function checkAndInitializeUser(user) {
     try {
         const snapshot = await get(userRef);
         if (!snapshot.exists()) {
-            console.log("Pierwsze logowanie. Tworzę bazę danych dla użytkownika...");
-            
-            // Definiujemy startową strukturę danych
+            console.log("Pierwsze logowanie. Tworzę strukturę bazy...");
             const initialData = {
                 profile: {
                     name: user.displayName,
                     email: user.email,
                     createdAt: new Date().toISOString()
                 },
-                decks: {} // Pusta lista talii na start
+                decks: {} // Puste miejsce na fiszki
             };
-            
             await set(userRef, initialData);
-            console.log("Baza zainicjalizowana pomyślnie.");
-        } else {
-            console.log("Użytkownik już istnieje w bazie, wczytuję dane.");
         }
     } catch (error) {
-        console.error("Błąd podczas sprawdzania bazy:", error);
+        console.error("Błąd inicjalizacji użytkownika:", error);
     }
+}
+
+// --- LOGIKA PRZYCISKÓW ---
+
+// Przycisk Logowania (z obsługą Mobile vs Desktop)
+const loginBtn = document.getElementById('loginBtn');
+if (loginBtn) {
+    loginBtn.addEventListener('click', () => {
+        // Sprawdzamy, czy użytkownik jest na urządzeniu mobilnym
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        if (isMobile) {
+            // Na telefonach przekierowujemy stronę do Google
+            signInWithRedirect(auth, provider);
+        } else {
+            // Na komputerach otwieramy okienko pop-up
+            signInWithPopup(auth, provider).catch(err => console.error(err));
+        }
+    });
+}
+
+// Przycisk Wylogowania
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        signOut(auth).catch(err => console.error("Błąd wylogowania:", err));
+    });
 }
 
 // --- LOGIKA BAZY DANYCH ---
@@ -97,27 +126,20 @@ function loadUserDecks() {
     onValue(userDecksRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            console.log("Twoje talie:", data);
-            // Tutaj możesz wywołać funkcję rysującą talie w HTML (np. renderDecks(data))
+            console.log("Twoje dane fiszek:", data);
         } else {
-            console.log("Twoja lista talii jest obecnie pusta.");
+            console.log("Lista talii jest pusta.");
         }
     });
 }
 
-// --- PRZYCISKI I NAWIGACJA ---
-
-document.getElementById('loginBtn')?.addEventListener('click', () => {
-    signInWithPopup(auth, provider).catch(err => console.error("Błąd logowania:", err));
-});
-
-document.getElementById('logoutBtn')?.addEventListener('click', () => {
-    signOut(auth).catch(err => console.error("Błąd wylogowania:", err));
-});
+// --- NAWIGACJA MIĘDZY EKRANAMI ---
 
 window.navigateTo = function(targetId) {
     const currentScreen = document.querySelector('.screen.active');
-    if (currentScreen) navigationHistory.push(currentScreen.id);
+    if (currentScreen) {
+        navigationHistory.push(currentScreen.id);
+    }
     updateView(targetId);
 }
 
@@ -131,5 +153,7 @@ window.goBack = function() {
 function updateView(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const target = document.getElementById(id);
-    if (target) target.classList.add('active');
+    if (target) {
+        target.classList.add('active');
+    }
 }
