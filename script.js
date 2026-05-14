@@ -7,7 +7,8 @@ import {
     getRedirectResult,
     GoogleAuthProvider, 
     onAuthStateChanged, 
-    signOut 
+    signOut,
+    browserPopupRedirectResolver // <--- MUSISZ TO DODAĆ TUTAJ
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // 1. Konfiguracja Firebase
