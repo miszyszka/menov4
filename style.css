@@ -43,11 +43,19 @@ p {
   color: var(--white);
 }
 
+h3{
+  font-weight: 700;
+  opacity: 0.5;
+  font-size: 12px;
+}
+
 .logo {
-  position: absolute;
-  top: 0px;
-  left: 0px;
   user-select: none;
+}
+
+.logo img {
+  width: 100px;     /* Ustawiasz taką szerokość, jaką chcesz */
+  height: auto;     /* Bardzo ważne: automatycznie dopasuje wysokość, zachowując proporcje */
 }
 
 .logo-centered {
@@ -56,26 +64,59 @@ p {
   user-select: none;
 }
 
+.name-label{
+  padding-left: 10px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 .screen {
-  position: relative;
-  display: none;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  /* border: solid 2px red; */
   height: 90vh;
   width: 90vw;
+  /* Domyślnie ukryte po prawej */
+  transform: translateX(110%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
 }
 
 .screen.active {
-  display: flex;          /* Zmieniamy z block na flex */
-  flex-direction: column; /* Układamy elementy (np. h1 i przycisk) w pionie */
-  align-items: center;    /* Środkujemy w poziomie */
-  justify-content: center;/* Środkujemy w pionie */
+  transform: translateX(0%);
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Ekran "wychodzący" w lewo (przy navigateTo) */
+.screen.slide-out-left {
+  transform: translateX(-110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Ekran "wychodzący" w prawo (przy goBack) */
+.screen.slide-out-right {
+  transform: translateX(110%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .btn {
-  border: 1px solid var(--white);
   border-radius: var(--basic-radius);
-  padding: 10px 20px;
   cursor: pointer;
   display: inline-block;
   opacity: 0.8;
@@ -83,8 +124,9 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
 }
+
+
 
 .btn-icon {
   width: 20px; /* Dopasuj rozmiar ikony */
@@ -101,6 +143,153 @@ p {
   margin: 0;
   color: var(--white);
   user-select: none;
+}
+
+
+
+
+/* DIFFERENT BUTTONS STYLES */
+
+.btn-google {
+  padding: 10px 20px;
+  gap: 12px;
+}
+
+.btn-outline{
+    border: 1px solid var(--white);
+}
+
+.grid-actions {
+  margin-left: auto; /* Przesuwa CAŁĄ grupę na prawą stronę */
+  display: flex;     /* Sprawia, że przyciski wewnątrz stoją obok siebie */
+  gap: 12px;         /* Robi ładny, równy odstęp 12px między przyciskami */
+}
+
+/* Przyciski zachowują swoje normalne wymiary i kształty */
+.settingsBTN, 
+.logoutBTN {
+  padding: 8px;      /* Przycisk ma ładny obszar do kliknięcia, ale nie jest szeroki */
+  display: flex;
+  align-items: center;
+}
+
+/* Obrazki wewnątrz przycisków */
+.settingsBTN img,
+.logoutBTN img {
+  width: 20px;
+}
+
+
+
+
+
+/* GRID */
+
+.grid{
+  border: rgba(255, 255, 0, 0.04) 1px solid;
+  display: flex;
+  /* justify-content: center; Centrowanie w poziomie */
+  align-items: center;     /* Centrowanie w pionie */
+  user-select: none;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-rows: 80px 80px calc(28.6vh - 160px) 340px 1fr;
+  min-height: 100vh;
+  width: calc(100vw - 80px);
+  box-sizing: border-box;
+}
+
+.grid-header {
+  height: 80px;
+  justify-content: left; /* Centrowanie w poziomie */
+}
+
+.grid-subheader {
+  height: 80px;
+  justify-content: left; /* Centrowanie w poziomie */
+}
+
+.grid-title {
+  height: calc(28.6vh - 160px); 
+}
+
+.grid-main {
+  height: 340px;
+}
+
+.grid-footer {
+ 
+}
+
+
+
+
+
+
+/* DECK CARDS */
+
+.grid-main {
+  flex-direction: column;
+  align-items: flex-start;
+  overflow-y: auto;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.deck-card {
+  width: 100%;
+  height: 160px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--basic-radius);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  transition: background 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.deck-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.01);
+}
+
+.deck-card h2 {
+  color: var(--white);
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.deck-card .deck-count {
+  margin-left: auto;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.btn-add-deck {
+  width: 100%;
+  height: 52px;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  border-radius: var(--basic-radius);
+  color: rgba(255, 255, 255, 0.5);
+  font-family: "Outfit", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-add-deck:hover {
+  border-color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* Reguła dla telefonów (ekrany o szerokości mniejszej niż 768px) */

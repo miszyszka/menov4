@@ -54,7 +54,7 @@ onAuthStateChanged(auth, async (user) => {
         await checkAndInitializeUser(user);
 
         if (userDisplay) {
-            userDisplay.innerText = `Logged in as: ${user.displayName}`;
+            userDisplay.innerText = `${user.displayName}`;
         }
 
         loadUserDecks();
@@ -93,24 +93,16 @@ async function checkAndInitializeUser(user) {
 // --- LOGIKA PRZYCISKÓW ---
 
 // Przycisk Logowania
-// Używamy zawsze signInWithPopup — działa na desktop i mobile (Chrome, Safari, Firefox).
-// signInWithRedirect jest zostawiony jako fallback tylko gdy popup zostanie zablokowany.
 const loginBtn = document.getElementById('loginBtn');
 if (loginBtn) {
     loginBtn.addEventListener('click', async () => {
         try {
             await signInWithPopup(auth, provider);
-            // onAuthStateChanged automatycznie obsłuży zalogowanie
         } catch (err) {
             if (err.code === 'auth/popup-blocked') {
-                // Popup zablokowany przez przeglądarkę — przełącz na redirect
-                console.warn("Popup zablokowany, używam redirect...");
                 signInWithRedirect(auth, provider);
             } else if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-                // Użytkownik sam zamknął okno — nic nie rób
-                console.log("Logowanie anulowane przez użytkownika.");
             } else {
-                console.error("Błąd logowania:", err.code, err.message);
                 alert("Błąd logowania: " + err.message);
             }
         }
@@ -134,35 +126,139 @@ function loadUserDecks() {
     
     onValue(userDecksRef, (snapshot) => {
         const data = snapshot.val();
-        if (data) {
-            console.log("Twoje dane fiszek:", data);
-        } else {
-            console.log("Lista talii jest pusta.");
+        renderDecks(data);
+    });
+}
+
+function renderDecks(data) {
+    const deckList = document.getElementById('deckList');
+    if (!deckList) return;
+
+    // Czyścimy listę (oprócz przycisku add)
+    const addBtn = document.getElementById('addDeckBtn');
+    deckList.innerHTML = '';
+
+    if (data) {
+        // Firebase może zwracać obiekt lub tablicę — normalizujemy do tablicy
+        const decks = Array.isArray(data) ? data : Object.values(data);
+        
+        decks.forEach(deck => {
+            const cardCount = deck.cards ? Object.values(deck.cards).length : 0;
+            const card = document.createElement('div');
+            card.className = 'deck-card';
+            card.innerHTML = `
+                <h2>${deck.title}</h2>
+                <span class="deck-count">${cardCount} kart</span>
+            `;
+            card.addEventListener('click', () => navigateTo('deck2'));
+            deckList.appendChild(card);
+        });
+    }
+
+    // Przycisk zawsze na końcu
+    deckList.appendChild(addBtn);
+}
+
+// Przycisk dodawania nowej talii
+const addDeckBtn = document.getElementById('addDeckBtn');
+if (addDeckBtn) {
+    addDeckBtn.addEventListener('click', async () => {
+        const title = prompt("Nazwa nowej talii:");
+        if (!title || !title.trim()) return;
+
+        const newDeck = {
+            id: `deck_${Date.now()}`,
+            title: title.trim(),
+            cards: {}
+        };
+
+        const decksRef = ref(db, `${currentUserPath}/decks/${newDeck.id}`);
+        try {
+            await set(decksRef, newDeck);
+        } catch (err) {
+            console.error("Błąd dodawania talii:", err);
         }
     });
 }
 
 // --- NAWIGACJA MIĘDZY EKRANAMI ---
 
+// Czas animacji musi pasować do transition w CSS (w ms)
+const ANIM_DURATION = 400;
+
 window.navigateTo = function(targetId) {
     const currentScreen = document.querySelector('.screen.active');
-    if (currentScreen) {
-        navigationHistory.push(currentScreen.id);
-    }
-    updateView(targetId);
+    const targetScreen = document.getElementById(targetId);
+    if (!targetScreen || !currentScreen || currentScreen.id === targetId) return;
+
+    navigationHistory.push(currentScreen.id);
+
+    // Nowy ekran startuje z prawej
+    targetScreen.style.transition = 'none';
+    targetScreen.classList.remove('slide-out-left', 'slide-out-right');
+    targetScreen.style.transform = 'translateX(110%)';
+    targetScreen.style.opacity = '0';
+
+    // Wymuszamy reflow żeby reset się zaaplikował
+    targetScreen.offsetHeight;
+
+    targetScreen.style.transition = '';
+    currentScreen.classList.add('slide-out-left');
+    currentScreen.classList.remove('active');
+    targetScreen.classList.add('active');
+    targetScreen.style.transform = '';
+    targetScreen.style.opacity = '';
+
+    // Sprzątamy klasy po animacji
+    setTimeout(() => {
+        currentScreen.classList.remove('slide-out-left');
+    }, ANIM_DURATION);
 }
 
 window.goBack = function() {
-    if (navigationHistory.length > 0) {
-        const lastId = navigationHistory.pop();
-        updateView(lastId);
-    }
+    if (navigationHistory.length === 0) return;
+
+    const currentScreen = document.querySelector('.screen.active');
+    const lastId = navigationHistory.pop();
+    const targetScreen = document.getElementById(lastId);
+    if (!targetScreen || !currentScreen) return;
+
+    // Nowy ekran startuje z lewej
+    targetScreen.style.transition = 'none';
+    targetScreen.classList.remove('slide-out-left', 'slide-out-right');
+    targetScreen.style.transform = 'translateX(-110%)';
+    targetScreen.style.opacity = '0';
+
+    targetScreen.offsetHeight;
+
+    targetScreen.style.transition = '';
+    currentScreen.classList.add('slide-out-right');
+    currentScreen.classList.remove('active');
+    targetScreen.classList.add('active');
+    targetScreen.style.transform = '';
+    targetScreen.style.opacity = '';
+
+    setTimeout(() => {
+        currentScreen.classList.remove('slide-out-right');
+    }, ANIM_DURATION);
 }
 
 function updateView(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    // Resetujemy wszystkie ekrany bez animacji (używane przy loginie/logout)
+    document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('active', 'slide-out-left', 'slide-out-right');
+        s.style.transform = '';
+        s.style.opacity = '';
+        s.style.transition = 'none';
+    });
     const target = document.getElementById(id);
     if (target) {
         target.classList.add('active');
     }
+    // Przywracamy transition po chwili
+    setTimeout(() => {
+        document.querySelectorAll('.screen').forEach(s => {
+            s.style.transition = '';
+        });
+    }, 50);
 }

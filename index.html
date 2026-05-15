@@ -19,27 +19,65 @@
   <body>
     <div id="login-section" class="screen active">
       <div class="logo-centered"><img src="icons/logo.svg" /></div>
-      <div id="loginBtn" class="btn">
+      <div id="loginBtn" class="btn btn-outline btn-google">
         <img src="icons/google.png" class="btn-icon" />
         <p>Log in with Google</p>
       </div>
     </div>
 
     <div id="home1" class="screen">
-      <h1>Hello!</h1>
-      <div class="logo"><img src="icons/logo.svg" /></div>
-      <p id="userDisplayName" style="color: var(--white)"></p>
-      <button id="logoutBtn">Log out</button>
-      <button onclick="navigateTo('deck2')">Go to Deck 2</button>
+      <div class="grid-container">
+        <div class="grid grid-header">
+          <div class="logo"><img src="icons/logo.svg" /></div>
+          <h3
+            class="name-label"
+            id="userDisplayName"
+            style="color: var(--white)"
+          ></h3>
+
+          <div class="grid-actions">
+            <div class="settingsBTN" id="settingsBTN">
+              <img src="icons/gear.png" />
+            </div>
+            <div class="logoutBTN" id="logoutBtn">
+              <img src="icons/logout.png" />
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-subheader">
+          <div class="btn" onclick="goBack()">
+            <img src="icons/arrow.png" class="btn-icon" />
+          </div>
+        </div>
+        <div class="grid grid-title"></div>
+        <div class="grid grid-main" id="deckList">
+          <!-- Decki ładowane dynamicznie przez JS -->
+          <button class="btn-add-deck" id="addDeckBtn">
+            + Dodaj nową talię
+          </button>
+        </div>
+        <div class="grid grid-footer"></div>
+      </div>
     </div>
 
     <div id="deck2" class="screen">
-      <h1>Section Deck 2</h1>
-      <button onclick="goBack()">Back</button>
+      <div class="grid-container">
+        <div class="grid grid-header">
+          <div class="logo"><img src="icons/logo.svg" /></div>
+        </div>
+        <div class="grid grid-subheader">
+          <div class="btn" onclick="goBack()">
+            <img src="icons/arrow.png" class="btn-icon" />
+          </div>
+        </div>
+        <div class="grid grid-title">test deck2</div>
+        <div class="grid grid-main"></div>
+        <div class="grid grid-footer"></div>
+      </div>
     </div>
 
     <script type="module" src="script.js"></script>
   </body>
 </html>
 <!-- ZMIANY NA MAC -->
- <!-- ZMIANY NA windows -->
+<!-- ZMIANY NA windows -->
